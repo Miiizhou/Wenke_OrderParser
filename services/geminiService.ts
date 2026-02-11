@@ -1,8 +1,6 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { ParsingResult, OrderRow } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const ORDER_SCHEMA: Schema = {
   type: Type.OBJECT,
   properties: {
@@ -35,6 +33,17 @@ const ORDER_SCHEMA: Schema = {
 };
 
 export const parseOrdersWithGemini = async (text: string): Promise<ParsingResult> => {
+  // 懒加载初始化
+  // 增加调试日志
+  const apiKey = process.env.API_KEY;
+  
+  if (!apiKey) {
+    console.error("Debug Info: process.env is", process.env);
+    throw new Error("System Error: API_KEY is missing. Please check your .env.local file and restart the server.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey: apiKey });
+
   const prompt = `
     You are a strict data parsing engine for e-commerce logistics. 
     Analyze the following raw text containing multiple order information. 
@@ -124,6 +133,6 @@ export const parseOrdersWithGemini = async (text: string): Promise<ParsingResult
     };
   } catch (error) {
     console.error("Gemini Parsing Error:", error);
-    throw new Error("Failed to process orders. Please try again.");
+    throw new Error("Failed to process orders. " + (error as Error).message);
   }
 };

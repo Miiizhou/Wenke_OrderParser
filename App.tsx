@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { parseOrdersWithGemini } from './services/geminiService';
+import { storageService } from './services/storageService';
 import { ParsingResult, OrderRow, HistoryItem, ChangeLogEntry } from './types';
 import { StatsPanel } from './components/StatsPanel';
 import { OrderTable } from './components/OrderTable';
@@ -18,22 +19,23 @@ export default function App() {
   const [view, setView] = useState<ViewState>('home');
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
-  const [previousView, setPreviousView] = useState<ViewState>('home'); // Track where we came from for "Back" button
+  const [previousView, setPreviousView] = useState<ViewState>('home');
   const [selectedBhamIds, setSelectedBhamIds] = useState<string[]>([]);
 
   // Load history on mount
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('orderParserHistory');
-      if (saved) {
-        setHistory(JSON.parse(saved));
-      }
-    } catch (e) {
-      console.error("Failed to load history", e);
-    }
+    const loadHistory = async () => {
+        try {
+            const data = await storageService.getAll();
+            setHistory(data);
+        } catch (e) {
+            console.error("Failed to load history", e);
+        }
+    };
+    loadHistory();
   }, []);
 
-  const saveToHistory = (newResult: ParsingResult) => {
+  const saveToHistory = async (newResult: ParsingResult) => {
     const newId = crypto.randomUUID();
     const newItem: HistoryItem = {
       id: newId,
@@ -41,21 +43,26 @@ export default function App() {
       result: newResult
     };
     
-    const newHistory = [newItem, ...history];
-    setHistory(newHistory);
-    localStorage.setItem('orderParserHistory', JSON.stringify(newHistory));
+    // Optimistically update UI
+    setHistory(prev => [newItem, ...prev]);
+    
+    // Save to DB (async)
+    await storageService.save(newItem);
+    
     return newId;
   };
 
-  const updateHistoryItem = (historyId: string, updatedResult: ParsingResult) => {
-    const updatedHistory = history.map(item => {
+  const updateHistoryItem = async (historyId: string, updatedResult: ParsingResult) => {
+    // Optimistically update UI
+    setHistory(prev => prev.map(item => {
       if (item.id === historyId) {
         return { ...item, result: updatedResult };
       }
       return item;
-    });
-    setHistory(updatedHistory);
-    localStorage.setItem('orderParserHistory', JSON.stringify(updatedHistory));
+    }));
+
+    // Update DB
+    await storageService.update(historyId, updatedResult);
   };
 
   const handleProcess = async () => {
@@ -68,12 +75,12 @@ export default function App() {
     setError(null);
     setResult(null);
     setCurrentHistoryId(null);
-    setView('home'); // Ensure we remain on home view
+    setView('home');
 
     try {
       const data = await parseOrdersWithGemini(inputText);
       setResult(data);
-      const newId = saveToHistory(data);
+      const newId = await saveToHistory(data);
       setCurrentHistoryId(newId);
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred.");
@@ -85,7 +92,7 @@ export default function App() {
   const handleSelectHistory = (item: HistoryItem) => {
     setResult(item.result);
     setCurrentHistoryId(item.id);
-    setView('historyDetail'); // Switch to specific history detail view
+    setView('historyDetail');
     setInputText(""); 
     setError(null);
   };
@@ -136,7 +143,7 @@ export default function App() {
   };
 
   const handleViewAuOrders = () => {
-    setPreviousView(view); // Remember if we were in 'home' or 'historyDetail'
+    setPreviousView(view);
     setView('auTable');
   };
 
@@ -201,7 +208,6 @@ export default function App() {
           
           <div className="flex gap-3">
             {view === 'historyDetail' || view === 'auTable' || view === 'bhamTable' ? (
-                // Logic for back button depends on where we are
                 (view === 'auTable' || view === 'bhamTable') ? null : ( 
                    <button
                    onClick={() => setView('historyList')}
@@ -274,7 +280,7 @@ export default function App() {
                       <span className="font-bold">Archived View:</span> You are viewing a saved parsing record.
                     </p>
                     <p className="text-xs text-amber-600 mt-1">
-                      Edits made here are automatically saved to the history log.
+                      Edits made here are automatically saved to the database.
                     </p>
                   </div>
                 </div>
