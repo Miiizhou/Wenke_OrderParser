@@ -1,0 +1,5 @@
+{
+  "name": "OrderParser Pro",
+  "description": "A specialized tool to parse, structure, and format messy e-commerce order text into standardized tables for logistics.",
+  "requestFramePermissions": []
+}
