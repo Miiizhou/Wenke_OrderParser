@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 export default defineConfig(({ mode }) => {
-  const root = process.cwd();
+  const root = path.resolve('.');
   // 1. 标准加载
   const env = loadEnv(mode, root, '');
   

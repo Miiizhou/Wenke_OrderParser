@@ -59,8 +59,8 @@ const EditableCell = ({
   return (
     <div 
       onDoubleClick={onDoubleClick} 
-      className="w-full h-full min-h-[1.5rem] cursor-pointer hover:bg-indigo-50/50 rounded px-1 -ml-1 flex items-center truncate"
-      title="Double click to edit"
+      className="w-full h-full min-h-[1.5rem] cursor-pointer hover:bg-indigo-50/50 rounded px-1 -ml-1 flex items-center truncate transition-colors"
+      title={String(value)} // SHOW FULL CONTENT ON HOVER
     >
       {value}
     </div>
@@ -70,7 +70,7 @@ const EditableCell = ({
 export const OrderTable: React.FC<OrderTableProps> = ({ orders, onUpdateOrder, onViewAuOrders, onViewBhamOrders }) => {
   const [editingCell, setEditingCell] = useState<{ id: string, field: string } | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
+  
   // Sorting Logic
   const sortedOrders = useMemo(() => {
     return [...orders].sort((a, b) => {
@@ -180,14 +180,12 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onUpdateOrder, o
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center flex-wrap gap-4">
-        <h2 className="text-xl font-bold text-slate-800">Generated Table</h2>
+      <div className="flex justify-between items-center flex-wrap gap-4 bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-6">
+            <h2 className="text-xl font-bold text-slate-800">Generated Table</h2>
+        </div>
         
         <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-400 hidden lg:inline-block mr-2">
-                Double-click to edit • Sort: Birmingham ↑ · Australia ↓
-            </span>
-            
             {/* Birmingham Button */}
             <button
             onClick={handleBhamClick}
@@ -197,7 +195,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onUpdateOrder, o
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
             >
             <span className="text-base">UK</span>
-            Bham Orders ({selectedIds.size})
+            Bham ({selectedIds.size})
             </button>
 
             {/* AU Button */}
@@ -206,7 +204,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onUpdateOrder, o
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors flex items-center gap-2 shadow-sm"
             >
             <span className="text-base">🇦🇺</span>
-            Export AU Orders
+            Export AU
             </button>
 
             <button
@@ -214,16 +212,32 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onUpdateOrder, o
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors flex items-center gap-2 shadow-sm"
             >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
-            Copy Standard
+            Copy
             </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200 shadow-sm">
-        <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200">
+      {/* 
+        RESIZABLE CONTAINER 
+        - Default height: 75vh (big window)
+        - resize: vertical (allows user to drag bottom edge)
+        - overflow: auto (scrolls if content is huge)
+        - w-full: Takes full width of the parent (which is now full width of screen)
+      */}
+      <div 
+        className="rounded-lg border border-slate-300 shadow-md bg-white relative group" 
+        style={{ 
+          resize: 'vertical', 
+          overflow: 'auto', 
+          height: '75vh', 
+          minHeight: '400px',
+          width: '100%' 
+        }}
+      >
+        <table className="w-full text-left whitespace-nowrap">
+          <thead className="bg-slate-100 text-slate-600 font-semibold border-b border-slate-200 sticky top-0 z-10 shadow-sm">
             <tr>
-              <th className="p-3 w-8 text-center">
+              <th className="p-3 w-8 text-center bg-slate-100">
                 <input 
                   type="checkbox" 
                   onChange={handleSelectAll}
@@ -231,22 +245,22 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onUpdateOrder, o
                   className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                 />
               </th>
-              <th className="p-3">Warnings</th>
-              <th className="p-3 w-32">客户订单号</th>
-              <th className="p-3 w-16 text-slate-400">快递单号</th>
-              <th className="p-3 w-32">收件人姓名</th>
-              <th className="p-3 w-64">收件人街道地址1</th>
-              <th className="p-3 w-32">收件人街道地址2</th>
-              <th className="p-3 w-32">城市</th>
-              <th className="p-3 w-8 text-slate-400">空</th>
-              <th className="p-3 w-24">邮编</th>
-              <th className="p-3 w-8 text-slate-400">空</th>
-              <th className="p-3 w-32">电话</th>
-              <th className="p-3 w-16 text-slate-400">英文品名</th>
-              <th className="p-3 w-64">中文品名 <span className="text-xs font-normal text-slate-400 ml-1">(Warehouse)</span></th>
-              <th className="p-3 w-16">数量</th>
-              <th className="p-3 w-32">备注</th>
-              <th className="p-3 w-32">规格</th>
+              <th className="p-3 bg-slate-100">Warnings</th>
+              <th className="p-3 min-w-[150px] bg-slate-100">客户订单号</th>
+              <th className="p-3 min-w-[100px] text-slate-400 bg-slate-100">快递单号</th>
+              <th className="p-3 min-w-[120px] bg-slate-100">收件人姓名</th>
+              <th className="p-3 min-w-[250px] bg-slate-100">收件人街道地址1</th>
+              <th className="p-3 min-w-[150px] bg-slate-100">收件人街道地址2</th>
+              <th className="p-3 min-w-[120px] bg-slate-100">城市</th>
+              <th className="p-3 w-8 text-slate-400 bg-slate-100">空</th>
+              <th className="p-3 w-24 bg-slate-100">邮编</th>
+              <th className="p-3 w-8 text-slate-400 bg-slate-100">空</th>
+              <th className="p-3 min-w-[120px] bg-slate-100">电话</th>
+              <th className="p-3 w-16 text-slate-400 bg-slate-100">英文品名</th>
+              <th className="p-3 min-w-[200px] bg-slate-100">中文品名 <span className="text-[0.8em] font-normal text-slate-400 ml-1">(Whse)</span></th>
+              <th className="p-3 w-16 bg-slate-100">数量</th>
+              <th className="p-3 min-w-[150px] bg-slate-100">备注</th>
+              <th className="p-3 min-w-[100px] bg-slate-100">规格</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
@@ -262,29 +276,29 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onUpdateOrder, o
                  </td>
                  <td className="p-3">
                    {row.isBlacklisted && (
-                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                     <span className="inline-flex items-center px-2 py-0.5 rounded text-[0.8em] font-medium bg-red-100 text-red-800">
                        🔴 地址预警
                      </span>
                    )}
                  </td>
                  
                 {[
-                  { k: 'customerOrderNo', w: 'font-mono text-xs' },
+                  { k: 'customerOrderNo', w: 'font-mono text-[0.9em]' },
                   { k: 'customerTrackingNo', w: 'bg-slate-50', readonly: true },
                   { k: 'recipientName', w: 'font-medium text-slate-900' },
-                  { k: 'address1', w: 'max-w-xs' },
-                  { k: 'address2', w: 'max-w-xs' },
+                  { k: 'address1', w: '' },
+                  { k: 'address2', w: '' },
                   { k: 'city', w: '' },
                   { k: 'empty1', w: 'bg-slate-50', readonly: true },
                   { k: 'zip', w: '' },
                   { k: 'empty2', w: 'bg-slate-50', readonly: true },
                   { k: 'phone', w: 'font-mono' },
                   { k: 'productNameEng', w: 'bg-slate-50', readonly: true },
-                  { k: 'productNameCn', w: 'max-w-xs', customRender: (val: string) => (
-                      <div className="flex items-center">
+                  { k: 'productNameCn', w: '', customRender: (val: string) => (
+                      <div className="flex items-center" title={val}>
                         <span className="truncate">{val}</span>
                         {row.warehouse && row.warehouse !== "Other" && (
-                            <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 shrink-0">
+                            <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[0.7em] font-medium bg-blue-50 text-blue-700 shrink-0">
                                 {row.warehouse}
                             </span>
                         )}
@@ -294,7 +308,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onUpdateOrder, o
                   { k: 'remarks', w: 'text-slate-500' },
                   { k: 'specs', w: 'text-slate-500' }
                 ].map((col, cIdx) => (
-                  <td key={cIdx} className={`p-3 ${col.w}`}>
+                  <td key={cIdx} className={`p-3 ${col.w} max-w-[300px]`}>
                     {!col.readonly ? (
                       <EditableCell
                         value={(row as any)[col.k] || ""}
@@ -318,7 +332,9 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onUpdateOrder, o
                               onCancel={() => setEditingCell(null)}
                            />
                          ) : (
-                            (row as any)[col.k]
+                            <div title={String((row as any)[col.k])} className="truncate">
+                                {(row as any)[col.k]}
+                            </div>
                          )
                       )
                     )}
@@ -328,6 +344,13 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onUpdateOrder, o
             ))}
           </tbody>
         </table>
+        
+        {/* Resize Handle Hint */}
+        <div className="absolute bottom-1 right-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+            <svg className="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="currentColor">
+               <path d="M22 22H20V20H22V22ZM22 18H20V16H22V18ZM18 22H16V20H18V22ZM14 22H12V20H14V22ZM22 14H20V12H22V14ZM10 22H8V20H10V22Z" />
+            </svg>
+        </div>
       </div>
     </div>
   );

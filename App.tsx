@@ -175,11 +175,15 @@ export default function App() {
   const bhamOrders = result ? result.orders.filter(o => selectedBhamIds.includes(o.id)) : [];
 
   return (
-    <div className={`min-h-screen p-6 md:p-12 transition-colors duration-500 ${view === 'historyDetail' || view === 'auTable' || view === 'bhamTable' ? 'bg-amber-50/40' : 'bg-slate-50'}`}>
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className={`min-h-screen p-4 transition-colors duration-500 ${view === 'historyDetail' || view === 'auTable' || view === 'bhamTable' ? 'bg-amber-50/40' : 'bg-slate-50'}`}>
+      {/* 
+        CHANGED: Removed max-w-7xl. 
+        Used w-full and px-6 to fully utilize 2560px screens.
+      */}
+      <div className="w-full px-4 mx-auto space-y-6">
         
         {/* Main Header */}
-        <header className="border-b border-slate-200 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <header className="border-b border-slate-200 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -206,7 +210,7 @@ export default function App() {
             </p>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
             {view === 'historyDetail' || view === 'auTable' || view === 'bhamTable' ? (
                 (view === 'auTable' || view === 'bhamTable') ? null : ( 
                    <button
@@ -239,34 +243,40 @@ export default function App() {
 
         {/* View Content */}
         {view === 'historyList' && (
-          <HistoryList 
-            history={history} 
-            onSelect={handleSelectHistory} 
-            onBack={() => setView('home')} 
-          />
+          <div className="max-w-7xl mx-auto">
+             <HistoryList 
+                history={history} 
+                onSelect={handleSelectHistory} 
+                onBack={() => setView('home')} 
+             />
+          </div>
         )}
 
         {/* AU Table View */}
         {view === 'auTable' && result && (
-            <AuOrderTable 
-                orders={auOrders} 
-                onUpdateOrder={handleUpdateOrder} 
-                onBack={handleBackFromSubView} 
-            />
+             <div className="w-full">
+                <AuOrderTable 
+                    orders={auOrders} 
+                    onUpdateOrder={handleUpdateOrder} 
+                    onBack={handleBackFromSubView} 
+                />
+            </div>
         )}
 
          {/* Birmingham Table View */}
          {view === 'bhamTable' && result && (
-            <BhamOrderTable 
-                orders={bhamOrders} 
-                onUpdateOrder={handleUpdateOrder} 
-                onBack={handleBackFromSubView} 
-            />
+            <div className="w-full">
+                <BhamOrderTable 
+                    orders={bhamOrders} 
+                    onUpdateOrder={handleUpdateOrder} 
+                    onBack={handleBackFromSubView} 
+                />
+            </div>
         )}
 
         {/* Detail/Edit View (Shared for Home Result and History Detail) */}
         {(view === 'historyDetail' || view === 'home') && result && (
-          <div className="animate-fade-in space-y-6">
+          <div className="animate-fade-in space-y-6 w-full">
             {view === 'historyDetail' && (
               <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg flex justify-between items-start shadow-sm">
                 <div className="flex">
@@ -316,7 +326,7 @@ export default function App() {
         )}
 
         {view === 'home' && !result && (
-          <div className="space-y-8 animate-fade-in">
+          <div className="space-y-8 animate-fade-in max-w-4xl mx-auto">
              {/* Input Section - Only show if no result is displayed */}
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                 <label htmlFor="orderInput" className="block text-sm font-medium text-slate-700 mb-2">
